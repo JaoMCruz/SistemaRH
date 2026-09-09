@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from app.services.usuario_service import UsuarioService
+from app.ui.dashboard.dashboard_window import DashboardWindow
 
 class LoginWindow(QWidget):
 
@@ -36,7 +37,10 @@ class LoginWindow(QWidget):
         usuario = self.usuario_service.autenticar(email, senha)
 
         if usuario:
-           print(f"Login bem-sucedido! Bem-vindo, {usuario.nome}!")
+           self.dashboard_window = DashboardWindow(usuario.nome)
+           self.dashboard_window.show()
+           self.close()
+           
 
         else:
             print("Falha no login. Usuário ou senha incorretos.")
