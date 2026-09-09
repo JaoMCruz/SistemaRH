@@ -24,3 +24,9 @@ class FuncionarioService:
 
     def excluir(self, funcionario_id):
         self.repository.excluir(funcionario_id)
+
+    def  atualizar(self, funcionario_id, dados):
+        self.repository.atualizar(funcionario_id, dados)
+
+    def buscar_por_id(self, funcionario_id):
+        return self.repository.buscar_por_id(funcionario_id)

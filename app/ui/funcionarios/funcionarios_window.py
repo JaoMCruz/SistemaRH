@@ -31,6 +31,10 @@ class FuncionariosWindow(QWidget):
         botao_excluir.clicked.connect(self.excluir_funcionario)
         layout.addWidget(botao_excluir)
 
+        botao_editar = QPushButton("Editar Selecionado")
+        botao_editar.clicked.connect(self.editar_funcionario)
+        layout.addWidget(botao_editar)
+
         self.setLayout(layout)
         self.carregar_funcionarios()
 
@@ -45,6 +49,21 @@ class FuncionariosWindow(QWidget):
 
         self.funcionario_service.excluir(funcionario_id)
         self.carregar_funcionarios()
+    def editar_funcionario(self):
+        linha_selecionada = self.tabela.currentRow()
+
+        if linha_selecionada == -1:
+            return
+
+        item = self.tabela.item(linha_selecionada, 0)
+        funcionario_id = item.data(Qt.UserRole)
+
+        funcionario = self.funcionario_service.buscar_por_id(funcionario_id)
+
+        self.janela_editar = EditarFuncionarioWindow(
+        self.funcionario_service, funcionario, self.carregar_funcionarios
+        )
+        self.janela_editar.show()
 
     def carregar_funcionarios(self):
         funcionarios = self.funcionario_service.listar_todos()
@@ -137,6 +156,69 @@ class CadastroFuncionarioWindow(QWidget):
         self.funcionario_service.cadastrar(
             nome, cpf, data_nascimento, cargo, departamento, data_admissao, salario
         )
+
+        self.callback_atualizar()
+        self.close()
+
+class EditarFuncionarioWindow(QWidget):
+    def __init__(self, funcionario_service, funcionario, callback_atualizar):
+        super().__init__()
+        self.funcionario_service = funcionario_service
+        self.funcionario = funcionario
+        self.callback_atualizar = callback_atualizar
+
+        self.setWindowTitle("Editar Funcionário")
+        self.setGeometry(150, 150, 400, 400)
+
+        layout = QVBoxLayout()
+
+        self.campo_nome = QLineEdit(funcionario.nome)
+        self.campo_cpf = QLineEdit(funcionario.cpf)
+        self.campo_cargo = QLineEdit(funcionario.cargo)
+        self.campo_departamento = QLineEdit(funcionario.departamento)
+        self.campo_salario = QLineEdit(str(funcionario.salario))
+
+        self.campo_data_nascimento = QDateEdit()
+        self.campo_data_nascimento.setCalendarPopup(True)
+        self.campo_data_nascimento.setDate(funcionario.data_nascimento)
+
+        self.campo_data_admissao = QDateEdit()
+        self.campo_data_admissao.setCalendarPopup(True)
+        self.campo_data_admissao.setDate(funcionario.data_admissao)
+
+        botao_salvar = QPushButton("Salvar Alterações")
+        botao_salvar.clicked.connect(self.salvar)
+
+        layout.addWidget(QLabel("Nome:"))
+        layout.addWidget(self.campo_nome)
+        layout.addWidget(QLabel("CPF:"))
+        layout.addWidget(self.campo_cpf)
+        layout.addWidget(QLabel("Cargo:"))
+        layout.addWidget(self.campo_cargo)
+        layout.addWidget(QLabel("Departamento:"))
+        layout.addWidget(self.campo_departamento)
+        layout.addWidget(QLabel("Salário:"))
+        layout.addWidget(self.campo_salario)
+        layout.addWidget(QLabel("Data de nascimento:"))
+        layout.addWidget(self.campo_data_nascimento)
+        layout.addWidget(QLabel("Data de admissão:"))
+        layout.addWidget(self.campo_data_admissao)
+        layout.addWidget(botao_salvar)
+
+        self.setLayout(layout)
+
+    def salvar(self):
+        dados = {
+            "nome": self.campo_nome.text(),
+            "cpf": self.campo_cpf.text(),
+            "cargo": self.campo_cargo.text(),
+            "departamento": self.campo_departamento.text(),
+            "salario": float(self.campo_salario.text()),
+            "data_nascimento": self.campo_data_nascimento.date().toPython(),
+            "data_admissao": self.campo_data_admissao.date().toPython(),
+        }
+
+        self.funcionario_service.atualizar(self.funcionario.id, dados)
 
         self.callback_atualizar()
         self.close()
