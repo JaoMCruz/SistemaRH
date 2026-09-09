@@ -3,6 +3,7 @@ from app.models.funcionario import Funcionario
 
 
 class FuncionarioService:
+
     def __init__(self):
         self.repository = FuncionarioRepository()
 
@@ -19,4 +20,7 @@ class FuncionarioService:
             data_admissao=data_admissao,
             salario=salario
         )
-        return self.repository.cadastrar(funcionario)
+        self.repository.cadastrar(funcionario)
+
+    def excluir(self, funcionario_id):
+        self.repository.excluir(funcionario_id)

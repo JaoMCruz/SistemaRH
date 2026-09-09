@@ -2,6 +2,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
 )
 from PySide6.QtCore import Qt
+from app.ui.funcionarios.funcionarios_window import FuncionariosWindow
 
 
 class DashboardWindow(QWidget):
@@ -38,6 +39,9 @@ class DashboardWindow(QWidget):
                     background-color: #1B5FB8;
                 }
             """)
+            if texto == "Funcionários":
+                botao.clicked.connect(self.abrir_funcionarios)
+
             layout_menu.addWidget(botao)
 
         layout_menu.addStretch()
@@ -83,3 +87,7 @@ class DashboardWindow(QWidget):
         layout_principal.addLayout(conteudo)
 
         self.setLayout(layout_principal)
+
+    def abrir_funcionarios(self):
+        self.janela_funcionarios = FuncionariosWindow()
+        self.janela_funcionarios.show()

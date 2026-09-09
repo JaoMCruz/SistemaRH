@@ -1,8 +1,8 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from app.ui.funcionarios.funcionarios_window import FuncionariosWindow
+from app.ui.boas_vindas.boas_vindas_window import BoasVindasWindow
 
 app = QApplication(sys.argv)
-janela = FuncionariosWindow()
+janela = BoasVindasWindow()
 janela.show()
 sys.exit(app.exec())

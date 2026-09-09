@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import ( QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QLineEdit, QDateEdit)
 from app.services.funcionario_service import FuncionarioService
-from PySide6.QtCore import QDate
+from PySide6.QtCore import QDate, Qt
+
 
 
 class FuncionariosWindow(QWidget):
@@ -26,7 +27,23 @@ class FuncionariosWindow(QWidget):
         self.tabela.setHorizontalHeaderLabels(["Nome", "CPF", "Cargo", "Departamento", "Salário"])
         layout.addWidget(self.tabela)
 
+        botao_excluir = QPushButton("Excluir Selecionado")
+        botao_excluir.clicked.connect(self.excluir_funcionario)
+        layout.addWidget(botao_excluir)
+
         self.setLayout(layout)
+        self.carregar_funcionarios()
+
+    def excluir_funcionario(self):
+        linha_selecionada = self.tabela.currentRow()
+
+        if linha_selecionada == -1:
+         return
+
+        item = self.tabela.item(linha_selecionada, 0)
+        funcionario_id = item.data(Qt.UserRole)
+
+        self.funcionario_service.excluir(funcionario_id)
         self.carregar_funcionarios()
 
     def carregar_funcionarios(self):
@@ -35,7 +52,11 @@ class FuncionariosWindow(QWidget):
         self.tabela.setRowCount(len(funcionarios))
 
         for linha, funcionario in enumerate(funcionarios):
-            self.tabela.setItem(linha, 0, QTableWidgetItem(funcionario.nome))
+
+            item_nome = QTableWidgetItem(funcionario.nome)
+            item_nome.setData(Qt.UserRole, funcionario.id)
+
+            self.tabela.setItem(linha, 0, item_nome)
             self.tabela.setItem(linha, 1, QTableWidgetItem(funcionario.cpf))
             self.tabela.setItem(linha, 2, QTableWidgetItem(funcionario.cargo))
             self.tabela.setItem(linha, 3, QTableWidgetItem(funcionario.departamento))
