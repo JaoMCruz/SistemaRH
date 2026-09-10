@@ -3,6 +3,9 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from app.ui.funcionarios.funcionarios_window import FuncionariosWindow
+from app.ui.documentos.documentos_window import TodosDocumentosWindow
+from app.ui.funcionarios.funcionarios_window import CadastroFuncionarioWindow
+from app.services.funcionario_service import FuncionarioService
 
 
 class DashboardWindow(QWidget):
@@ -41,6 +44,12 @@ class DashboardWindow(QWidget):
             """)
             if texto == "Funcionários":
                 botao.clicked.connect(self.abrir_funcionarios)
+
+            if texto == "Novo Funcionário":
+                botao.clicked.connect(self.abrir_novo_funcionario)
+
+            if texto == "Documentos":
+                botao.clicked.connect(self.abrir_documentos)
 
             layout_menu.addWidget(botao)
 
@@ -91,3 +100,14 @@ class DashboardWindow(QWidget):
     def abrir_funcionarios(self):
         self.janela_funcionarios = FuncionariosWindow()
         self.janela_funcionarios.show()
+
+    def abrir_novo_funcionario(self):
+        funcionario_service = FuncionarioService()
+        self.janela_novo_funcionario = CadastroFuncionarioWindow(
+        funcionario_service, lambda: None
+    )
+        self.janela_novo_funcionario.show()
+
+    def abrir_documentos(self):
+        self.janela_documentos = TodosDocumentosWindow()
+        self.janela_documentos.show()
