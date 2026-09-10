@@ -1,8 +1,8 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from app.ui.boas_vindas.boas_vindas_window import BoasVindasWindow
+from app.ui.documentos.documentos_window import TodosDocumentosWindow
 
 app = QApplication(sys.argv)
-janela = BoasVindasWindow()
+janela = TodosDocumentosWindow()
 janela.show()
 sys.exit(app.exec())

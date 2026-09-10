@@ -31,3 +31,12 @@ class DocumentoService:
         )
 
         self.repository.cadastrar(documento)
+
+    def listar_todos(self):
+        return self.repository.listar_todos()
+
+    def excluir(self, documento_id):
+        self.repository.excluir(documento_id)
+
+    def buscar_por_id(self, documento_id):
+        return self.repository.buscar_por_id(documento_id)

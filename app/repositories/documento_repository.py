@@ -13,3 +13,22 @@ class DocumentoRepository:
         session.add(documento)
         session.commit()
         session.close()
+
+    def listar_todos(self):
+        session = get_session()
+        documentos = session.query(Documento).all()
+        session.close()
+        return documentos
+
+    def excluir(self, documento_id):
+        session = get_session()
+        documento = session.query(Documento).filter(Documento.id == documento_id).first()
+        session.delete(documento)
+        session.commit()
+        session.close()
+
+    def buscar_por_id(self, documento_id):
+        session = get_session()
+        documento = session.query(Documento).filter(Documento.id == documento_id).first()
+        session.close()
+        return documento

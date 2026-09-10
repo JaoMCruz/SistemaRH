@@ -1,10 +1,13 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QPushButton, QLabel, QLineEdit, QDateEdit, QListWidget, QFileDialog
+    QPushButton, QLabel, QLineEdit, QDateEdit, QListWidget, QFileDialog,
+    QListWidgetItem
 )
 from app.services.funcionario_service import FuncionarioService
 from app.services.documento_service import DocumentoService
 from PySide6.QtCore import QDate, Qt
+
+import os
 
 
 class FuncionariosWindow(QWidget):
@@ -267,6 +270,8 @@ class DocumentosWindow(QWidget):
         self.lista_documentos = QListWidget()
         layout.addWidget(self.lista_documentos)
 
+        self.lista_documentos.itemDoubleClicked.connect(self.abrir_documento)
+
         self.setLayout(layout)
         self.carregar_documentos()
 
@@ -275,7 +280,9 @@ class DocumentosWindow(QWidget):
         documentos = self.documento_service.listar_por_funcionario(self.funcionario_id)
 
         for documento in documentos:
-            self.lista_documentos.addItem(documento.nome_arquivo)
+         item = QListWidgetItem(documento.nome_arquivo)
+         item.setData(Qt.UserRole, documento.caminho_arquivo)
+         self.lista_documentos.addItem(item)
 
     def enviar_documento(self):
         caminho, _ = QFileDialog.getOpenFileName(self, "Selecionar documento")
@@ -285,3 +292,7 @@ class DocumentosWindow(QWidget):
 
         self.documento_service.cadastrar(self.funcionario_id, caminho)
         self.carregar_documentos()
+
+    def abrir_documento(self, item):
+        caminho = item.data(Qt.UserRole)
+        os.startfile(caminho)
