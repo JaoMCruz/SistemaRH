@@ -1,0 +1,15 @@
+from app.database.conexao import get_session
+from app.models.documento import Documento
+
+class DocumentoRepository:
+    def listar_por_funcionario(self, funcionario_id):
+        session = get_session()
+        documentos = session.query(Documento).filter(Documento.funcionario_id == funcionario_id).all()
+        session.close()
+        return documentos
+
+    def cadastrar(self, documento):
+        session = get_session()
+        session.add(documento)
+        session.commit()
+        session.close()
