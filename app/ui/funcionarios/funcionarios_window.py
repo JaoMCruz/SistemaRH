@@ -184,7 +184,11 @@ class CadastroFuncionarioWindow(QWidget):
             QMessageBox.warning(self, "Campos obrigatórios", "Preencha todos os campos antes de salvar.")
             return
     
-        salario = float(self.campo_salario.text())
+        try:
+            salario = float(self.campo_salario.text())
+        except ValueError:
+            QMessageBox.warning(self, "Valor inválido", "O salário precisa ser um número válido (ex: 2500.00).")
+            return
 
         data_nascimento = self.campo_data_nascimento.date().toPython()
         data_admissao = self.campo_data_admissao.date().toPython()
@@ -244,21 +248,29 @@ class EditarFuncionarioWindow(QWidget):
 
         self.setLayout(layout)
 
-    def salvar(self):
-        dados = {
-            "nome": self.campo_nome.text(),
-            "cpf": self.campo_cpf.text(),
-            "cargo": self.campo_cargo.text(),
-            "departamento": self.campo_departamento.text(),
-            "salario": float(self.campo_salario.text()),
-            "data_nascimento": self.campo_data_nascimento.date().toPython(),
-            "data_admissao": self.campo_data_admissao.date().toPython(),
-        }
+def salvar(self):
+    texto_salario = self.campo_salario.text().replace(",", ".")
 
-        self.funcionario_service.atualizar(self.funcionario.id, dados)
+    try:
+        salario = float(texto_salario)
+    except ValueError:
+        QMessageBox.warning(self, "Valor inválido", "O salário precisa ser um número válido (ex: 2500.00).")
+        return
 
-        self.callback_atualizar()
-        self.close()
+    dados = {
+        "nome": self.campo_nome.text(),
+        "cpf": self.campo_cpf.text(),
+        "cargo": self.campo_cargo.text(),
+        "departamento": self.campo_departamento.text(),
+        "salario": salario,
+        "data_nascimento": self.campo_data_nascimento.date().toPython(),
+        "data_admissao": self.campo_data_admissao.date().toPython(),
+    }
+
+    self.funcionario_service.atualizar(self.funcionario.id, dados)
+
+    self.callback_atualizar()
+    self.close()
 
 
 class DocumentosWindow(QWidget):
