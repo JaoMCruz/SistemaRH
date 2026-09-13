@@ -32,3 +32,9 @@ class DocumentoRepository:
         documento = session.query(Documento).filter(Documento.id == documento_id).first()
         session.close()
         return documento
+
+    def contar_por_funcionario(self, funcionario_id):
+        session = get_session()
+        total = session.query(Documento).filter(Documento.funcionario_id == funcionario_id).count()
+        session.close()
+        return total

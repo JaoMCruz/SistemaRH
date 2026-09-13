@@ -1,13 +1,14 @@
+import os
+
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QLineEdit, QDateEdit, QListWidget, QFileDialog,
     QListWidgetItem, QMessageBox
 )
-from app.services.funcionario_service import FuncionarioService
-from app.services.documento_service import DocumentoService
 from PySide6.QtCore import QDate, Qt
 
-import os
+from app.services.funcionario_service import FuncionarioService
+from app.services.documento_service import DocumentoService
 
 
 class FuncionariosWindow(QWidget):
@@ -57,6 +58,18 @@ class FuncionariosWindow(QWidget):
         item = self.tabela.item(linha_selecionada, 0)
         funcionario_id = item.data(Qt.UserRole)
         nome_funcionario = item.text()
+
+        documento_service = DocumentoService()
+        total_documentos = documento_service.contar_por_funcionario(funcionario_id)
+
+        if total_documentos > 0:
+            QMessageBox.warning(
+                self,
+                "Não é possível excluir",
+                f"'{nome_funcionario}' possui {total_documentos} documento(s) vinculado(s). "
+                "Exclua os documentos primeiro."
+            )
+            return
 
         resposta = QMessageBox.question(
             self,
@@ -183,9 +196,11 @@ class CadastroFuncionarioWindow(QWidget):
         if not nome or not cpf or not cargo or not departamento:
             QMessageBox.warning(self, "Campos obrigatórios", "Preencha todos os campos antes de salvar.")
             return
-    
+
+        texto_salario = self.campo_salario.text().replace(",", ".")
+
         try:
-            salario = float(self.campo_salario.text())
+            salario = float(texto_salario)
         except ValueError:
             QMessageBox.warning(self, "Valor inválido", "O salário precisa ser um número válido (ex: 2500.00).")
             return
@@ -248,29 +263,38 @@ class EditarFuncionarioWindow(QWidget):
 
         self.setLayout(layout)
 
-def salvar(self):
-    texto_salario = self.campo_salario.text().replace(",", ".")
+    def salvar(self):
+        nome = self.campo_nome.text()
+        cpf = self.campo_cpf.text()
+        cargo = self.campo_cargo.text()
+        departamento = self.campo_departamento.text()
 
-    try:
-        salario = float(texto_salario)
-    except ValueError:
-        QMessageBox.warning(self, "Valor inválido", "O salário precisa ser um número válido (ex: 2500.00).")
-        return
+        if not nome or not cpf or not cargo or not departamento:
+            QMessageBox.warning(self, "Campos obrigatórios", "Preencha todos os campos antes de salvar.")
+            return
 
-    dados = {
-        "nome": self.campo_nome.text(),
-        "cpf": self.campo_cpf.text(),
-        "cargo": self.campo_cargo.text(),
-        "departamento": self.campo_departamento.text(),
-        "salario": salario,
-        "data_nascimento": self.campo_data_nascimento.date().toPython(),
-        "data_admissao": self.campo_data_admissao.date().toPython(),
-    }
+        texto_salario = self.campo_salario.text().replace(",", ".")
 
-    self.funcionario_service.atualizar(self.funcionario.id, dados)
+        try:
+            salario = float(texto_salario)
+        except ValueError:
+            QMessageBox.warning(self, "Valor inválido", "O salário precisa ser um número válido (ex: 2500.00).")
+            return
 
-    self.callback_atualizar()
-    self.close()
+        dados = {
+            "nome": nome,
+            "cpf": cpf,
+            "cargo": cargo,
+            "departamento": departamento,
+            "salario": salario,
+            "data_nascimento": self.campo_data_nascimento.date().toPython(),
+            "data_admissao": self.campo_data_admissao.date().toPython(),
+        }
+
+        self.funcionario_service.atualizar(self.funcionario.id, dados)
+
+        self.callback_atualizar()
+        self.close()
 
 
 class DocumentosWindow(QWidget):
@@ -305,9 +329,9 @@ class DocumentosWindow(QWidget):
         documentos = self.documento_service.listar_por_funcionario(self.funcionario_id)
 
         for documento in documentos:
-         item = QListWidgetItem(documento.nome_arquivo)
-         item.setData(Qt.UserRole, documento.caminho_arquivo)
-         self.lista_documentos.addItem(item)
+            item = QListWidgetItem(documento.nome_arquivo)
+            item.setData(Qt.UserRole, documento.caminho_arquivo)
+            self.lista_documentos.addItem(item)
 
     def enviar_documento(self):
         caminho, _ = QFileDialog.getOpenFileName(self, "Selecionar documento")

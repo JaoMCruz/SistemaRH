@@ -40,3 +40,6 @@ class DocumentoService:
 
     def buscar_por_id(self, documento_id):
         return self.repository.buscar_por_id(documento_id)
+
+    def contar_por_funcionario(self, funcionario_id):
+        return self.repository.contar_por_funcionario(funcionario_id)
