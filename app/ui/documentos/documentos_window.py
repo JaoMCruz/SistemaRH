@@ -2,7 +2,7 @@ import os
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QPushButton, QLabel, QLineEdit
+    QPushButton, QLabel, QLineEdit, QMessageBox
 )
 from PySide6.QtCore import Qt
 
@@ -96,6 +96,14 @@ class TodosDocumentosWindow(QWidget):
 
         item = self.tabela.item(linha_selecionada, 0)
         documento_id = item.data(Qt.UserRole)
+        nome_documento = self.tabela.item(linha_selecionada, 1).text()
 
-        self.documento_service.excluir(documento_id)
-        self.carregar_documentos()
+        resposta = QMessageBox.question(
+            self,
+            "Confirmação",
+            f"Tem certeza que deseja excluir o documento '{nome_documento}'?",
+        )
+
+        if resposta == QMessageBox.Yes:
+            self.documento_service.excluir(documento_id)
+            self.carregar_documentos()
