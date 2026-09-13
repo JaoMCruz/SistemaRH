@@ -9,6 +9,7 @@ from PySide6.QtCore import QDate, Qt
 
 from app.services.funcionario_service import FuncionarioService
 from app.services.documento_service import DocumentoService
+from sqlalchemy.exc import IntegrityError
 
 
 class FuncionariosWindow(QWidget):
@@ -208,13 +209,13 @@ class CadastroFuncionarioWindow(QWidget):
         data_nascimento = self.campo_data_nascimento.date().toPython()
         data_admissao = self.campo_data_admissao.date().toPython()
 
-        self.funcionario_service.cadastrar(
-            nome, cpf, data_nascimento, cargo, departamento, data_admissao, salario
-        )
-
-        self.callback_atualizar()
-        self.close()
-
+        try:
+             self.funcionario_service.cadastrar(
+        nome, cpf, data_nascimento, cargo, departamento, data_admissao, salario
+    )
+        except IntegrityError:
+         QMessageBox.warning(self, "CPF duplicado", "Já existe um funcionário cadastrado com esse CPF.")
+         return
 
 class EditarFuncionarioWindow(QWidget):
     def __init__(self, funcionario_service, funcionario, callback_atualizar):
@@ -291,12 +292,11 @@ class EditarFuncionarioWindow(QWidget):
             "data_admissao": self.campo_data_admissao.date().toPython(),
         }
 
-        self.funcionario_service.atualizar(self.funcionario.id, dados)
-
-        self.callback_atualizar()
-        self.close()
-
-
+        try:
+            self.funcionario_service.atualizar(self.funcionario.id, dados)
+        except IntegrityError:
+            QMessageBox.warning(self, "CPF duplicado", "Já existe um funcionário cadastrado com esse CPF.")
+            return
 class DocumentosWindow(QWidget):
     def __init__(self, funcionario_id):
         super().__init__()
