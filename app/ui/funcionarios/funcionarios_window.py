@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QLineEdit, QDateEdit, QListWidget, QFileDialog,
-    QListWidgetItem
+    QListWidgetItem, QMessageBox
 )
 from app.services.funcionario_service import FuncionarioService
 from app.services.documento_service import DocumentoService
@@ -56,9 +56,17 @@ class FuncionariosWindow(QWidget):
 
         item = self.tabela.item(linha_selecionada, 0)
         funcionario_id = item.data(Qt.UserRole)
+        nome_funcionario = item.text()
 
-        self.funcionario_service.excluir(funcionario_id)
-        self.carregar_funcionarios()
+        resposta = QMessageBox.question(
+            self,
+            "Confirmar Exclusão",
+            f"Tem certeza que deseja excluir o funcionário '{nome_funcionario}'?",
+        )
+
+        if resposta == QMessageBox.Yes:
+            self.funcionario_service.excluir(funcionario_id)
+            self.carregar_funcionarios()
 
     def editar_funcionario(self):
         linha_selecionada = self.tabela.currentRow()
