@@ -179,6 +179,11 @@ class CadastroFuncionarioWindow(QWidget):
         cpf = self.campo_cpf.text()
         cargo = self.campo_cargo.text()
         departamento = self.campo_departamento.text()
+
+        if not nome or not cpf or not cargo or not departamento:
+            QMessageBox.warning(self, "Campos obrigatórios", "Preencha todos os campos antes de salvar.")
+            return
+    
         salario = float(self.campo_salario.text())
 
         data_nascimento = self.campo_data_nascimento.date().toPython()
