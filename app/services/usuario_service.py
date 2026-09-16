@@ -18,3 +18,6 @@ class UsuarioService:
             return None
 
         return usuario
+
+    def buscar_por_id(self, usuario_id):
+        return self.repository.buscar_por_id(usuario_id)

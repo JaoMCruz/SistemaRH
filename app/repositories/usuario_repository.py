@@ -7,3 +7,9 @@ class UsuarioRepository:
         usuario = session.query(Usuario).filter(Usuario.email == email).first()
         session.close()
         return usuario
+
+    def buscar_por_id(self, usuario_id):
+        session = get_session()
+        usuario = session.query(Usuario).filter(Usuario.id == usuario_id).first()
+        session.close()
+        return usuario

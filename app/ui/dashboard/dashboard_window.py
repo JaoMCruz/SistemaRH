@@ -6,6 +6,7 @@ from app.ui.funcionarios.funcionarios_window import FuncionariosWindow
 from app.ui.documentos.documentos_window import TodosDocumentosWindow
 from app.ui.funcionarios.funcionarios_window import CadastroFuncionarioWindow
 from app.services.funcionario_service import FuncionarioService
+from PySide6.QtCore import QSettings
 
 
 class DashboardWindow(QWidget):
@@ -50,6 +51,9 @@ class DashboardWindow(QWidget):
 
             if texto == "Documentos":
                 botao.clicked.connect(self.abrir_documentos)
+
+            if texto == "Sair":
+                botao.clicked.connect(self.sair)
 
             layout_menu.addWidget(botao)
 
@@ -111,3 +115,13 @@ class DashboardWindow(QWidget):
     def abrir_documentos(self):
         self.janela_documentos = TodosDocumentosWindow()
         self.janela_documentos.show()
+
+    def sair(self):
+        settings = QSettings("SistemaRH", "SistemaRH")
+        settings.remove("usuario_id")
+
+        from app.ui.boas_vindas.boas_vindas_window import BoasVindasWindow
+        self.janela_boas_vindas = BoasVindasWindow()
+        self.janela_boas_vindas.show()
+
+        self.close()
