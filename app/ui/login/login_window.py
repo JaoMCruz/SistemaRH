@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 from app.services.usuario_service import UsuarioService
 from app.ui.dashboard.dashboard_window import DashboardWindow
 
@@ -43,7 +43,7 @@ class LoginWindow(QWidget):
            
 
         else:
-            print("Falha no login. Usuário ou senha incorretos.")
+           QMessageBox.warning(self, "Erro de Login", "Usuário ou senha incorretos.")
 
         
 
