@@ -26,6 +26,11 @@ class FuncionariosWindow(QWidget):
         titulo.setStyleSheet("font-size: 22px; font-weight: bold; color: #1E2761;")
         layout.addWidget(titulo)
 
+        self.campo_busca = QLineEdit()
+        self.campo_busca.setPlaceholderText("Buscar por nome ou CPF")
+        self.campo_busca.textChanged.connect(self.filtrar_funcionarios)
+        layout.addWidget(self.campo_busca)
+
         botao_novo = QPushButton("Novo Funcionário")
         botao_novo.clicked.connect(self.abrir_cadastro)
         layout.addWidget(botao_novo)
@@ -99,8 +104,10 @@ class FuncionariosWindow(QWidget):
         self.janela_editar.show()
 
     def carregar_funcionarios(self):
-        funcionarios = self.funcionario_service.listar_todos()
+        self.funcionarios = self.funcionario_service.listar_todos()
+        self.exibir_funcionarios(self.funcionarios)
 
+    def exibir_funcionarios(self, funcionarios):
         self.tabela.setRowCount(len(funcionarios))
 
         for linha, funcionario in enumerate(funcionarios):
@@ -113,6 +120,16 @@ class FuncionariosWindow(QWidget):
             self.tabela.setItem(linha, 2, QTableWidgetItem(funcionario.cargo))
             self.tabela.setItem(linha, 3, QTableWidgetItem(funcionario.departamento))
             self.tabela.setItem(linha, 4, QTableWidgetItem(str(funcionario.salario)))
+
+    def filtrar_funcionarios(self, texto):
+        texto = texto.lower()
+
+        funcionarios_filtrados = []
+        for funcionario in self.funcionarios:
+            if texto in funcionario.nome.lower() or texto in funcionario.cpf.lower():
+                funcionarios_filtrados.append(funcionario)
+
+        self.exibir_funcionarios(funcionarios_filtrados)
 
     def abrir_cadastro(self):
         self.janela_cadastro = CadastroFuncionarioWindow(
@@ -210,12 +227,16 @@ class CadastroFuncionarioWindow(QWidget):
         data_admissao = self.campo_data_admissao.date().toPython()
 
         try:
-             self.funcionario_service.cadastrar(
-        nome, cpf, data_nascimento, cargo, departamento, data_admissao, salario
-    )
+            self.funcionario_service.cadastrar(
+                nome, cpf, data_nascimento, cargo, departamento, data_admissao, salario
+            )
         except IntegrityError:
-         QMessageBox.warning(self, "CPF duplicado", "Já existe um funcionário cadastrado com esse CPF.")
-         return
+            QMessageBox.warning(self, "CPF duplicado", "Já existe um funcionário cadastrado com esse CPF.")
+            return
+
+        self.callback_atualizar()
+        self.close()
+
 
 class EditarFuncionarioWindow(QWidget):
     def __init__(self, funcionario_service, funcionario, callback_atualizar):
@@ -297,6 +318,11 @@ class EditarFuncionarioWindow(QWidget):
         except IntegrityError:
             QMessageBox.warning(self, "CPF duplicado", "Já existe um funcionário cadastrado com esse CPF.")
             return
+
+        self.callback_atualizar()
+        self.close()
+
+
 class DocumentosWindow(QWidget):
     def __init__(self, funcionario_id):
         super().__init__()
