@@ -28,7 +28,7 @@ class DashboardWindow(QWidget):
         layout_menu.addWidget(logo)
         layout_menu.addSpacing(20)
 
-        botoes_menu = ["Início", "Funcionários", "Novo Funcionário", "Documentos", "Sair"]
+        botoes_menu = ["Início", "Funcionários", "Novo Funcionário", "Documentos", "Sair do sistema"]
         for texto in botoes_menu:
             botao = QPushButton(texto)
             botao.setStyleSheet("""
@@ -52,7 +52,7 @@ class DashboardWindow(QWidget):
             if texto == "Documentos":
                 botao.clicked.connect(self.abrir_documentos)
 
-            if texto == "Sair":
+            if texto == "Sair do Sistema":
                 botao.clicked.connect(self.sair)
 
             layout_menu.addWidget(botao)
