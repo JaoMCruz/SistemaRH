@@ -1,127 +1,191 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QStackedWidget
 )
-from PySide6.QtCore import Qt
-from app.ui.funcionarios.funcionarios_window import FuncionariosWindow
+from PySide6.QtCore import Qt, QSettings
+
+from app.ui.funcionarios.funcionarios_window import (
+    FuncionariosWindow, CadastroFuncionarioWindow, EditarFuncionarioWindow, DocumentosFuncionarioWindow
+)
 from app.ui.documentos.documentos_window import TodosDocumentosWindow
-from app.ui.funcionarios.funcionarios_window import CadastroFuncionarioWindow
 from app.services.funcionario_service import FuncionarioService
-from PySide6.QtCore import QSettings
+from app.services.documento_service import DocumentoService
 
 
 class DashboardWindow(QWidget):
-    def __init__(self, nome_usuario):
+    def __init__(self, nome_usuario, callback_sair=None):
         super().__init__()
-        self.setWindowTitle("Dashboard - Sistema de RH")
-        self.setGeometry(100, 100, 1100, 650)
+        self.nome_usuario = nome_usuario
+        self.callback_sair = callback_sair
+
+        self.funcionario_service = FuncionarioService()
+        self.documento_service = DocumentoService()
 
         layout_principal = QHBoxLayout()
 
-        # ---- Menu lateral ----
         menu = QFrame()
-        menu.setFixedWidth(220)
+        menu.setFixedWidth(200)
         menu.setStyleSheet("background-color: #2E7DE1;")
-
         layout_menu = QVBoxLayout()
-        logo = QLabel("RH\nGestão de Pessoas")
-        logo.setStyleSheet("color: white; font-size: 16px; font-weight: bold;")
-        layout_menu.addWidget(logo)
+        layout_menu.setContentsMargins(15, 30, 15, 30)
+        layout_menu.setSpacing(10)
+
+        titulo_menu = QLabel("Sistema RH")
+        titulo_menu.setStyleSheet("color: white; font-size: 18px; font-weight: bold;")
+        layout_menu.addWidget(titulo_menu)
         layout_menu.addSpacing(20)
 
-        botoes_menu = ["Início", "Funcionários", "Novo Funcionário", "Documentos", "Sair do sistema"]
-        for texto in botoes_menu:
-            botao = QPushButton(texto)
-            botao.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    color: white;
-                    text-align: left;
-                    padding: 10px;
-                    border: none;
-                }
-                QPushButton:hover {
-                    background-color: #1B5FB8;
-                }
-            """)
-            if texto == "Funcionários":
-                botao.clicked.connect(self.abrir_funcionarios)
+        estilo_botao_menu = """
+            QPushButton {
+                background-color: transparent;
+                color: white;
+                text-align: left;
+                padding: 10px;
+                border: none;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #1E2761;
+                border-radius: 6px;
+            }
+        """
 
-            if texto == "Novo Funcionário":
-                botao.clicked.connect(self.abrir_novo_funcionario)
+        botao_inicio = QPushButton("Início")
+        botao_funcionarios = QPushButton("Funcionários")
+        botao_documentos = QPushButton("Documentos")
+        botao_sair = QPushButton("Sair")
 
-            if texto == "Documentos":
-                botao.clicked.connect(self.abrir_documentos)
-
-            if texto == "Sair do Sistema":
-                botao.clicked.connect(self.sair)
-
+        for botao in (botao_inicio, botao_funcionarios, botao_documentos, botao_sair):
+            botao.setStyleSheet(estilo_botao_menu)
+            botao.setCursor(Qt.PointingHandCursor)
             layout_menu.addWidget(botao)
 
         layout_menu.addStretch()
         menu.setLayout(layout_menu)
 
-        # ---- Área de conteúdo ----
-        conteudo = QVBoxLayout()
+        botao_inicio.clicked.connect(self.mostrar_inicio)
+        botao_funcionarios.clicked.connect(self.mostrar_funcionarios)
+        botao_documentos.clicked.connect(self.mostrar_documentos)
+        botao_sair.clicked.connect(self.sair)
 
-        titulo = QLabel(f"Olá, {nome_usuario}!")
-        titulo.setStyleSheet("font-size: 26px; font-weight: bold; color: #1E2761;")
+        self.pagina_inicio = QWidget()
+        layout_inicio = QVBoxLayout()
+        layout_inicio.setContentsMargins(30, 30, 30, 30)
 
-        subtitulo = QLabel("Aqui está um resumo do seu sistema de RH.")
-        subtitulo.setStyleSheet("font-size: 14px; color: #5A6B94;")
+        titulo_boas_vindas = QLabel(f"Olá, {self.nome_usuario}!")
+        titulo_boas_vindas.setObjectName("titulo")
+        layout_inicio.addWidget(titulo_boas_vindas)
+        layout_inicio.addSpacing(20)
 
-        conteudo.addWidget(titulo)
-        conteudo.addWidget(subtitulo)
-        conteudo.addSpacing(20)
+        layout_cards = QHBoxLayout()
+        self.card_total_funcionarios = self.criar_card("Funcionários", "0")
+        self.card_funcionarios_ativos = self.criar_card("Funcionários ativos", "0")
+        layout_cards.addWidget(self.card_total_funcionarios)
+        layout_cards.addWidget(self.card_funcionarios_ativos)
+        layout_cards.addStretch()
 
-        # ---- Cards ----
-        linha_cards = QHBoxLayout()
-        cards_info = [("Funcionários", "0"), ("Funcionários ativos", "0")]
+        layout_inicio.addLayout(layout_cards)
+        layout_inicio.addStretch()
+        self.pagina_inicio.setLayout(layout_inicio)
 
-        for label_texto, valor in cards_info:
-            card = QFrame()
-            card.setStyleSheet("background-color: white; border-radius: 8px; border: 1px solid #E0E4EE;")
-            layout_card = QVBoxLayout()
+        self.pagina_funcionarios = FuncionariosWindow(
+            callback_abrir_cadastro=self.mostrar_cadastro,
+            callback_abrir_editar=self.mostrar_editar,
+            callback_abrir_documentos=self.mostrar_documentos_funcionario
+        )
 
-            valor_label = QLabel(valor)
-            valor_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #1E2761;")
+        self.pagina_documentos = TodosDocumentosWindow()
 
-            desc_label = QLabel(label_texto)
-            desc_label.setStyleSheet("font-size: 13px; color: #5A6B94;")
+        self.pagina_formulario = QWidget()
+        self.layout_formulario = QVBoxLayout()
+        self.pagina_formulario.setLayout(self.layout_formulario)
 
-            layout_card.addWidget(valor_label)
-            layout_card.addWidget(desc_label)
-            card.setLayout(layout_card)
-            linha_cards.addWidget(card)
+        self.pagina_documentos_funcionario = QWidget()
+        self.layout_documentos_funcionario = QVBoxLayout()
+        self.pagina_documentos_funcionario.setLayout(self.layout_documentos_funcionario)
 
-        conteudo.addLayout(linha_cards)
-        conteudo.addStretch()
+        self.stack = QStackedWidget()
+        self.stack.addWidget(self.pagina_inicio)
+        self.stack.addWidget(self.pagina_funcionarios)
+        self.stack.addWidget(self.pagina_documentos)
+        self.stack.addWidget(self.pagina_formulario)
+        self.stack.addWidget(self.pagina_documentos_funcionario)
 
         layout_principal.addWidget(menu)
-        layout_principal.addLayout(conteudo)
-
+        layout_principal.addWidget(self.stack)
         self.setLayout(layout_principal)
 
-    def abrir_funcionarios(self):
-        self.janela_funcionarios = FuncionariosWindow()
-        self.janela_funcionarios.show()
+        self.atualizar_cards()
 
-    def abrir_novo_funcionario(self):
-        funcionario_service = FuncionarioService()
-        self.janela_novo_funcionario = CadastroFuncionarioWindow(
-        funcionario_service, lambda: None
-    )
-        self.janela_novo_funcionario.show()
+    def criar_card(self, titulo, valor):
+        card = QFrame()
+        card.setFixedSize(180, 100)
+        card.setStyleSheet("""
+            QFrame {
+                background-color: white;
+                border-radius: 10px;
+                border: 1px solid #ddd;
+            }
+        """)
+        layout_card = QVBoxLayout()
+        label_valor = QLabel(valor)
+        label_valor.setStyleSheet("font-size: 26px; font-weight: bold; color: #2E7DE1;")
+        label_titulo = QLabel(titulo)
+        label_titulo.setStyleSheet("font-size: 12px; color: #555;")
+        layout_card.addWidget(label_valor)
+        layout_card.addWidget(label_titulo)
+        card.setLayout(layout_card)
+        card.label_valor = label_valor
+        return card
 
-    def abrir_documentos(self):
-        self.janela_documentos = TodosDocumentosWindow()
-        self.janela_documentos.show()
+    def atualizar_cards(self):
+        total = len(self.funcionario_service.listar_todos())
+        self.card_total_funcionarios.label_valor.setText(str(total))
+        self.card_funcionarios_ativos.label_valor.setText(str(total))
+
+    def _limpar_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+    def mostrar_inicio(self):
+        self.atualizar_cards()
+        self.stack.setCurrentWidget(self.pagina_inicio)
+
+    def mostrar_funcionarios(self):
+        self.pagina_funcionarios.carregar_funcionarios()
+        self.stack.setCurrentWidget(self.pagina_funcionarios)
+
+    def mostrar_documentos(self):
+        self.pagina_documentos.carregar_documentos()
+        self.stack.setCurrentWidget(self.pagina_documentos)
+
+    def mostrar_cadastro(self):
+        self._limpar_layout(self.layout_formulario)
+        formulario = CadastroFuncionarioWindow(self.funcionario_service, self.voltar_para_funcionarios)
+        self.layout_formulario.addWidget(formulario)
+        self.stack.setCurrentWidget(self.pagina_formulario)
+
+    def mostrar_editar(self, funcionario_id):
+        self._limpar_layout(self.layout_formulario)
+        formulario = EditarFuncionarioWindow(self.funcionario_service, funcionario_id, self.voltar_para_funcionarios)
+        self.layout_formulario.addWidget(formulario)
+        self.stack.setCurrentWidget(self.pagina_formulario)
+
+    def mostrar_documentos_funcionario(self, funcionario_id):
+        self._limpar_layout(self.layout_documentos_funcionario)
+        pagina = DocumentosFuncionarioWindow(
+            self.documento_service, self.funcionario_service, funcionario_id, self.mostrar_funcionarios
+        )
+        self.layout_documentos_funcionario.addWidget(pagina)
+        self.stack.setCurrentWidget(self.pagina_documentos_funcionario)
+
+    def voltar_para_funcionarios(self):
+        self.mostrar_funcionarios()
 
     def sair(self):
         settings = QSettings("SistemaRH", "SistemaRH")
         settings.remove("usuario_id")
-
-        from app.ui.boas_vindas.boas_vindas_window import BoasVindasWindow
-        self.janela_boas_vindas = BoasVindasWindow()
-        self.janela_boas_vindas.show()
-
-        self.close()
+        if self.callback_sair:
+            self.callback_sair()
